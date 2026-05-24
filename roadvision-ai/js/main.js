@@ -8,36 +8,17 @@ function applyTheme(theme){
   document.documentElement.setAttribute('data-theme', theme === 'dark' ? 'dark' : 'light');
 }
 
-(function(){
-  const settings = Settings.load();
-  const theme = settings.theme || 'light';
-  applyTheme(theme);
-})();
-
-// Mark the sidebar link active based on filename
-(function(){
-  const links = document.querySelectorAll('.nav-link');
-  const path = location.pathname.split('/').pop() || 'index.html';
-  links.forEach(link=>{
-    const href = link.getAttribute('href').split('/').pop();
-    if(href === path) link.classList.add('active');
-    link.addEventListener('click', ()=>{
-      links.forEach(l=>l.classList.remove('active'));
-      link.classList.add('active');
-    });
-  });
-})();
-
-// Settings persistence helper
+// Settings persistence helper — defined FIRST so it can be used immediately
 const Settings = {
   key: 'asphlatrica_ai_settings_v1',
   load(){
-    try{ const s = localStorage.getItem(this.key); return s? JSON.parse(s): {} }catch(e){return{}}},
+    try{ const s = localStorage.getItem(this.key); return s ? JSON.parse(s) : {}; }catch(e){return{};}
+  },
   save(obj){
     try{
       localStorage.setItem(this.key, JSON.stringify(obj));
       if(obj.theme){ applyTheme(obj.theme); }
-    }catch(e){console.warn(e)}
+    }catch(e){console.warn(e);}
   }
 };
 
@@ -61,7 +42,7 @@ const Detections = {
   },
   add(item) {
     const arr = this.load();
-    arr.unshift(item); // prepend so newest shows up first
+    arr.unshift(item);
     this.save(arr);
   },
   clear() {
@@ -72,6 +53,27 @@ const Detections = {
     }
   }
 };
+
+// Apply saved theme immediately (Settings is now defined above)
+(function(){
+  const settings = Settings.load();
+  const theme = settings.theme || 'dark';
+  applyTheme(theme);
+})();
+
+// Mark the sidebar link active based on filename
+(function(){
+  const links = document.querySelectorAll('.nav-link');
+  const path = location.pathname.split('/').pop() || 'index.html';
+  links.forEach(link=>{
+    const href = (link.getAttribute('href') || '').split('/').pop();
+    if(href === path) link.classList.add('active');
+    link.addEventListener('click', ()=>{
+      links.forEach(l=>l.classList.remove('active'));
+      link.classList.add('active');
+    });
+  });
+})();
 
 // Simple time formatter for alert timestamps
 function timeAgo(minutes){
@@ -85,8 +87,7 @@ function applyUserProfile() {
   const settings = Settings.load();
   const userName = settings.name || '';
   const userEmail = settings.email || '';
-  
-  // Calculate initials (e.g. "John Doe" -> "JD")
+
   const words = userName.trim().split(' ').filter(Boolean);
   let initials = 'AA';
   if (words.length > 0) {
