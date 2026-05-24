@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Road Condition Detector</title>
+  <link rel="stylesheet" href="style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+</head>
+<body>
+  <aside class="sidebar">
+    <div class="brand">
+      <!-- simple road icon -->
+      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="24" height="24" rx="4" fill="url(#g)"/><path d="M6 3v18M18 3v18M6 12h12" stroke="white" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" opacity="0.9"/></svg>
+      Road Condition
+    </div>
+    <nav>
+      <a href="index.html" class="active"><svg viewBox="0 0 24 24" fill="none"><path d="M3 12h18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>Dashboard</a>
+      <a href="pages/upload.html"><svg viewBox="0 0 24 24" fill="none"><path d="M12 3v14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M5 21h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>Upload</a>
+      <a href="pages/webcam.html"><svg viewBox="0 0 24 24" fill="none"><rect x="3" y="6" width="18" height="12" rx="2" stroke="currentColor" stroke-width="1.6"/><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.6"/></svg>Webcam</a>
+      <a href="pages/map.html"><svg viewBox="0 0 24 24" fill="none"><path d="M12 2C8 6 6 9 6 12a6 6 0 1012 0c0-3-2-6-6-10z" stroke="currentColor" stroke-width="1.6"/><circle cx="12" cy="12" r="2" fill="currentColor"/></svg>Map</a>
+    </nav>
+    <footer class="sidebar-footer">Built with HTML, CSS, JS & Roboflow/TensorFlow.js</footer>
+  </aside>
+
+  <main class="main">
+    <header class="header">
+      <h1>Road Condition Detection Dashboard</h1>
+      <p class="lead">Detect potholes, cracks and waterlogging from images and live camera.</p>
+    </header>
+
+    <section class="cards">
+      <a class="card" href="pages/upload.html">
+        <h3>Upload Image</h3>
+        <p>Upload a road photo to detect conditions with confidence scores.</p>
+      </a>
+      <a class="card" href="pages/webcam.html">
+        <h3>Live Webcam</h3>
+        <p>Run real-time detection from your device camera.</p>
+      </a>
+      <a class="card" href="pages/map.html">
+        <h3>Map Visualization</h3>
+        <p>View detected conditions pinned on an interactive map.</p>
+      </a>
+    </section>
+
+    <!-- Stats -->
+    <section class="stats" style="margin-top:22px">
+      <div class="stat">
+        <div class="icon" style="background:linear-gradient(135deg,var(--accent),var(--accent-2))">🛣️</div>
+        <div>
+          <div class="num" id="totalDetections">0</div>
+          <div class="label">Total Detections</div>
+        </div>
+      </div>
+      <div class="stat">
+        <div class="icon" style="background:var(--danger)">🕳️</div>
+        <div>
+          <div class="num" id="potholesCount">0</div>
+          <div class="label">Potholes Found</div>
+        </div>
+      </div>
+      <div class="stat">
+        <div class="icon" style="background:var(--warn)">⚡</div>
+        <div>
+          <div class="num" id="cracksCount">0</div>
+          <div class="label">Cracks Found</div>
+        </div>
+      </div>
+      <div class="stat">
+        <div class="icon" style="background:var(--water)">💧</div>
+        <div>
+          <div class="num" id="waterCount">0</div>
+          <div class="label">Waterlogging Found</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="notes">
+      <h2>Quick Setup</h2>
+      <ul>
+        <li>To use real detection, add your Roboflow model name and API key in <code>app.js</code>.</li>
+        <li>If no model is configured, the app will run in demo mode (random detections).</li>
+      </ul>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>

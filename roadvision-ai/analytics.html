@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Asphlatrica AI — Analytics</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="brand"><span class="brand-dot"></span>Asphlatrica AI</div>
+      <ul class="nav-list">
+        <li><a href="index.html" class="nav-link">Home</a></li>
+        <li><a href="map.html" class="nav-link">Map</a></li>
+        <li><a href="analytics.html" class="nav-link active">Analytics</a></li>
+        <li><a href="reports.html" class="nav-link">Reports</a></li>
+        <li><a href="alerts.html" class="nav-link">Alerts</a></li>
+        <li><a href="assets.html" class="nav-link">Assets</a></li>
+        <li><a href="detect.html" class="nav-link">Detect</a></li>
+        <li><a href="settings.html" class="nav-link">Settings</a></li>
+      </ul>
+      <div class="sidebar-footer">Kakinada district analytics — AP R&B and surveys</div>
+    </aside>
+
+    <main class="main-pane">
+      <div class="topbar">
+        <div class="logo">Asphlatrica AI — Analytics</div>
+        <input id="searchInput" class="search-input" placeholder="Search charts...">
+        <div style="display:flex;gap:10px;align-items:center">
+          <button class="icon-button">🔔</button>
+          <div class="avatar">KA</div>
+        </div>
+      </div>
+
+      <h2>Road Condition Analytics — Kakinada District</h2>
+      <p class="small">Data sourced from AP Roads & Buildings Department and field surveys</p>
+
+      <section class="stats-grid" style="margin-top:12px">
+        <div class="stats-card"><div class="label">Total Roads Monitored</div><div class="value">312 km</div></div>
+        <div class="stats-card"><div class="label">Critical Zones</div><div class="value">5</div></div>
+        <div class="stats-card"><div class="label">Repair Pending</div><div class="value">18</div></div>
+        <div class="stats-card"><div class="label">Last Survey Date</div><div class="value">23-05-2026</div></div>
+      </section>
+
+      <section style="display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:12px">
+        <div class="panel-card">
+          <h3>Road Condition Distribution</h3>
+          <canvas id="donutChart"></canvas>
+        </div>
+        <div class="panel-card">
+          <h3>Road Condition Trend (Jan–May 2026)</h3>
+          <canvas id="lineChart"></canvas>
+        </div>
+        <div class="panel-card">
+          <h3>Damage Type Distribution</h3>
+          <canvas id="barChart"></canvas>
+        </div>
+        <div class="panel-card">
+          <h3>Top 5 Worst Roads</h3>
+          <canvas id="hbarChart"></canvas>
+        </div>
+      </section>
+
+      <div class="panel-card" style="margin-top:12px">
+        <strong>Data note:</strong>
+        <p class="small">Statistics based on AP R&B Department reports, Kakinada Municipal Corporation surveys, and citizen reports (2025–2026). Road Doctor machine reduced potholes by ~23% since Q4 2025.</p>
+      </div>
+
+    </main>
+  </div>
+
+  <script src="js/main.js"></script>
+  <script>
+    // Chart data
+    const donutCtx = document.getElementById('donutChart');
+    new Chart(donutCtx, {type:'doughnut',data:{labels:['Good','Moderate','Poor'],datasets:[{data:[48,31,21],backgroundColor:['#22c55e','#eab308','#ef4444']}]} , options:{responsive:true}});
+
+    const lineCtx = document.getElementById('lineChart');
+    new Chart(lineCtx, {type:'line',data:{labels:['Jan','Feb','Mar','Apr','May'],datasets:[{label:'Poor roads %',data:[12,14,16,18,21],borderColor:'#ef4444',fill:false}]},options:{responsive:true}});
+
+    const barCtx = document.getElementById('barChart');
+    new Chart(barCtx, {type:'bar',data:{labels:['Potholes','Waterlogging','Cracks','Debris'],datasets:[{label:'Count',data:[143,38,67,12],backgroundColor:['#ef4444','#3b82f6','#f59e0b','#9ca3ff']}]},options:{responsive:true}});
+
+    const hbarCtx = document.getElementById('hbarChart');
+    new Chart(hbarCtx, {type:'bar',data:{labels:['Sarpavaram Main Rd','Old Town Rd','Jagannaickpur Rd','Beach Road','Gandhi Nagar Rd'],datasets:[{label:'Severity score',data:[95,88,82,74,70],backgroundColor:'#ef4444'}]},options:{indexAxis:'y',responsive:true}});
+  </script>
+</body>
+</html>
+

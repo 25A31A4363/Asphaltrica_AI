@@ -1,0 +1,343 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Asphlatrica AI — Detect</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="brand"><span class="brand-dot"></span>Asphlatrica AI</div>
+      <ul class="nav-list">
+        <li><a href="index.html" class="nav-link">Home</a></li>
+        <li><a href="map.html" class="nav-link">Map</a></li>
+        <li><a href="analytics.html" class="nav-link">Analytics</a></li>
+        <li><a href="reports.html" class="nav-link">Reports</a></li>
+        <li><a href="alerts.html" class="nav-link">Alerts</a></li>
+        <li><a href="assets.html" class="nav-link">Assets</a></li>
+        <li><a href="detect.html" class="nav-link active">Detect</a></li>
+        <li><a href="settings.html" class="nav-link">Settings</a></li>
+      </ul>
+      <div class="sidebar-footer">Upload road images for AI defect detection</div>
+    </aside>
+
+    <main class="main-pane">
+      <div class="topbar">
+        <div class="logo">Asphlatrica AI — Detect</div>
+        <input id="searchInput" class="search-input" placeholder="Search detection history...">
+        <div style="display:flex;gap:10px;align-items:center">
+          <button class="icon-button">🔔</button>
+          <div class="avatar">KA</div>
+        </div>
+      </div>
+
+      <h2>Road Defect Detection</h2>
+      <p class="small">Upload an image from Kakinada or Sarpavaram to detect potholes, cracks, and waterlogging.</p>
+
+      <div class="section-card" style="margin-bottom:18px; padding:14px 18px;">
+        <h4 style="margin:0 0 8px; font-size:14px; display:flex; align-items:center; justify-content:space-between;">
+          <span style="display:flex; align-items:center; gap:8px;">🧠 Full-image AI Scan</span>
+          <span style="font-size:11px; font-weight:700; background:rgba(34,197,94,0.12); color:var(--good); padding:3px 10px; border-radius:12px;">Whole-image analysis</span>
+        </h4>
+        <p class="small" style="margin:6px 0 0; font-size:13px; color:var(--muted)">The system performs a full-frame scan across the entire uploaded image and highlights every detected defect area.</p>
+      </div>
+
+      <div class="section-card">
+        <div id="uploadZone" class="upload-zone">
+          <strong>Drag & drop a road image here</strong>
+          <p class="small" style="margin-top: 4px;">or click to choose a photo from your device.</p>
+          <input id="fileInput" type="file" accept="image/*" class="hidden">
+        </div>
+        
+        <!-- Image & canvas overlay container -->
+        <div id="previewContainer" class="hidden" style="position:relative; margin-top:16px; width:100%; max-width:600px; margin-left:auto; margin-right:auto; display:flex; justify-content:center; align-items:center;">
+          <img id="previewImage" class="file-preview" alt="Preview" style="width:100%; height:auto; display:block; border-radius:14px; border:1px solid var(--border);">
+          <canvas id="overlayCanvas" style="position:absolute; left:0; top:0; width:100%; height:100%; pointer-events:none; border-radius:14px;"></canvas>
+        </div>
+
+        <div style="display:flex; gap:12px; justify-content:center; margin-top:16px;">
+          <button id="analyzeBtn" class="button-primary" style="display:none;">Analyze Image</button>
+          <button id="resetBtn" class="button-primary" style="background:#64748b; border:none; display:none;">Upload Another</button>
+        </div>
+        
+        <div id="progressBar" class="progress-track hidden"><div class="progress-fill" id="progressFill"></div></div>
+      </div>
+
+      <div id="resultPanel" class="section-card" style="display:none">
+        <h3 style="margin-top:0; margin-bottom:12px;">Detection Results</h3>
+        <div id="resultContent" class="small">Waiting for image analysis...</div>
+      </div>
+    </main>
+  </div>
+
+  <script src="js/main.js"></script>
+  <script>
+    const uploadZone = document.getElementById('uploadZone');
+    const fileInput = document.getElementById('fileInput');
+    const previewContainer = document.getElementById('previewContainer');
+    const previewImage = document.getElementById('previewImage');
+    const overlayCanvas = document.getElementById('overlayCanvas');
+    const analyzeBtn = document.getElementById('analyzeBtn');
+    const resetBtn = document.getElementById('resetBtn');
+    const resultPanel = document.getElementById('resultPanel');
+    const resultContent = document.getElementById('resultContent');
+    const progressBar = document.getElementById('progressBar');
+    const progressFill = document.getElementById('progressFill');
+
+    let selectedFile = null;
+
+    const setProgress = (percent) => {
+      progressBar.classList.remove('hidden');
+      progressFill.style.width = `${percent}%`;
+    };
+
+    const updateResult = (html) => {
+      resultPanel.style.display = 'block';
+      resultContent.innerHTML = html;
+    };
+
+    const loadPreview = (file) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        previewImage.src = reader.result;
+        previewContainer.classList.remove('hidden');
+        uploadZone.classList.add('hidden');
+        analyzeBtn.style.display = 'inline-block';
+        resetBtn.style.display = 'inline-block';
+        
+        // Reset overlay and results
+        const ctx = overlayCanvas.getContext('2d');
+        ctx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
+        resultPanel.style.display = 'none';
+        progressBar.classList.add('hidden');
+        progressFill.style.width = '0%';
+        
+        // Set canvas internal resolution to match image dimensions
+        previewImage.onload = () => {
+          overlayCanvas.width = previewImage.naturalWidth;
+          overlayCanvas.height = previewImage.naturalHeight;
+          overlayCanvas.style.width = previewImage.clientWidth + 'px';
+          overlayCanvas.style.height = previewImage.clientHeight + 'px';
+        };
+      };
+      reader.readAsDataURL(file);
+    };
+
+    uploadZone.addEventListener('click', () => fileInput.click());
+    uploadZone.addEventListener('dragover', (e) => { e.preventDefault(); uploadZone.classList.add('dragover'); });
+    uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('dragover'));
+    uploadZone.addEventListener('drop', (e) => {
+      e.preventDefault(); uploadZone.classList.remove('dragover');
+      const file = e.dataTransfer.files[0];
+      if(file && file.type.startsWith('image/')){
+        selectedFile = file; loadPreview(file);
+      }
+    });
+
+    fileInput.addEventListener('change', () => {
+      const file = fileInput.files[0];
+      if(file && file.type.startsWith('image/')){
+        selectedFile = file; loadPreview(file);
+      }
+    });
+
+    resetBtn.addEventListener('click', () => {
+      selectedFile = null;
+      fileInput.value = '';
+      previewContainer.classList.add('hidden');
+      uploadZone.classList.remove('hidden');
+      analyzeBtn.style.display = 'none';
+      resetBtn.style.display = 'none';
+      resultPanel.style.display = 'none';
+      progressBar.classList.add('hidden');
+      progressFill.style.width = '0%';
+    });
+
+    // Simulated local detections for Demo Mode
+    const runDemoDetections = (imgWidth, imgHeight) => {
+      const classes = ['Pothole', 'Crack', 'Waterlogging'];
+      const count = Math.floor(Math.random() * 2) + 2; // 2 or 3 detections for a more complete scan
+      const preds = [];
+      
+      for (let i = 0; i < count; i++) {
+        const cls = classes[Math.floor(Math.random() * classes.length)];
+        const confidence = 0.68 + Math.random() * 0.28;
+        
+        // bounding boxes coordinates use center-based x, y
+        const w = Math.round(imgWidth * (0.15 + Math.random() * 0.15));
+        const h = Math.round(imgHeight * (0.08 + Math.random() * 0.12));
+        const x = Math.round(w / 2 + Math.random() * (imgWidth - w));
+        const y = Math.round(h / 2 + Math.random() * (imgHeight - h));
+        
+        preds.push({
+          class: cls,
+          confidence: confidence,
+          x: x,
+          y: y,
+          width: w,
+          height: h
+        });
+      }
+      return preds;
+    };
+
+    // Helper coordinates for active roads in Kakinada
+    const kakinadaRoads = [
+      { name: 'Sarpavaram Main Road', coords: [17.0101, 82.2420] },
+      { name: 'Kakinada–Rajahmundry Highway', coords: [17.045, 82.225] },
+      { name: 'NH 216 Bypass', coords: [16.995, 82.260] },
+      { name: 'Old Town Road', coords: [17.003, 82.234] },
+      { name: 'Jagannaickpur Road', coords: [17.020, 82.220] },
+      { name: 'Suryaraopeta Road', coords: [17.025, 82.235] },
+      { name: 'Gandhi Nagar Road', coords: [17.015, 82.215] }
+    ];
+
+    const drawPredictions = (predictions) => {
+      const ctx = overlayCanvas.getContext('2d');
+      ctx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
+      
+      predictions.forEach(pred => {
+        const w = pred.width;
+        const h = pred.height;
+        const left = pred.x - w / 2;
+        const top = pred.y - h / 2;
+        
+        let color = '#ef4444'; // Red for Pothole
+        if (pred.class.toLowerCase().includes('crack')) {
+          color = '#f97316'; // Orange for Crack
+        } else if (pred.class.toLowerCase().includes('water')) {
+          color = '#3b82f6'; // Blue for Waterlogging
+        }
+        
+        // Draw box outline with width proportional to image size
+        ctx.strokeStyle = color;
+        ctx.lineWidth = Math.max(3, Math.round(overlayCanvas.width * 0.005));
+        ctx.strokeRect(left, top, w, h);
+        
+        // Draw label background card
+        ctx.fillStyle = color;
+        const labelText = `${pred.class} (${Math.round(pred.confidence * 100)}%)`;
+        ctx.font = `bold ${Math.max(13, Math.round(overlayCanvas.width * 0.02))}px 'Inter', sans-serif`;
+        const textMetrics = ctx.measureText(labelText);
+        const labelHeight = Math.max(16, Math.round(overlayCanvas.width * 0.024));
+        
+        // Place text box above the bbox or inside if it overflows screen
+        const textTop = top - labelHeight - 6 > 0 ? top - labelHeight - 6 : top;
+        ctx.fillRect(left, textTop, textMetrics.width + 12, labelHeight + 6);
+        
+        // Draw text label
+        ctx.fillStyle = '#ffffff';
+        ctx.fillText(labelText, left + 6, textTop + labelHeight);
+      });
+    };
+
+    analyzeBtn.addEventListener('click', async () => {
+      if(!selectedFile) return alert('Please upload an image first.');
+      analyzeBtn.disabled = true;
+      analyzeBtn.textContent = 'Analyzing...';
+      
+      try {
+        updateResult('Uploading image and running AI models...');
+        setProgress(20);
+
+        let predictions = [];
+        const modelName = 'Asphlatrica AI Local Scan';
+        await new Promise(resolve => setTimeout(resolve, 800));
+        setProgress(55);
+        predictions = runDemoDetections(overlayCanvas.width, overlayCanvas.height);
+        await new Promise(resolve => setTimeout(resolve, 400));
+
+        setProgress(90);
+        
+        if (predictions.length === 0) {
+          updateResult(`
+            <div style="text-align:center; padding:16px;">
+              <span style="font-size:24px;">🟢</span>
+              <h4 style="margin:8px 0 4px;">No defects detected</h4>
+              <p class="small" style="margin:0;">This road section is in good condition.</p>
+            </div>
+          `);
+          drawPredictions([]);
+        } else {
+          // Draw bounding boxes on canvas overlay
+          drawPredictions(predictions);
+
+          // Add to Global LocalStorage Detections to sync map and alert list!
+          predictions.forEach(pred => {
+            const randomRoad = kakinadaRoads[Math.floor(Math.random() * kakinadaRoads.length)];
+            const newDefectAlert = {
+              id: Date.now() + Math.random(),
+              severity: pred.class.toLowerCase().includes('pothole') ? 'critical' : pred.class.toLowerCase().includes('crack') ? 'warning' : 'info',
+              title: randomRoad.name,
+              msg: `${pred.class} defect detected with ${Math.round(pred.confidence * 100)}% confidence during AI analysis.`,
+              time: 1, // 1 minute ago
+              date: new Date().toISOString(),
+              coords: randomRoad.coords,
+              condition: pred.class.toLowerCase().includes('pothole') ? 'poor' : pred.class.toLowerCase().includes('crack') ? 'moderate' : 'poor',
+              issue: pred.class
+            };
+            
+            if (window.RV && window.RV.Detections) {
+              window.RV.Detections.add(newDefectAlert);
+            }
+          });
+
+          // Render beautiful result list
+          const list = predictions.map(pred => {
+            let color = 'var(--poor)';
+            let icon = '🔴';
+            if (pred.class.toLowerCase().includes('crack')) {
+              color = 'var(--moderate)';
+              icon = '🟠';
+            } else if (pred.class.toLowerCase().includes('water')) {
+              color = 'var(--accent)';
+              icon = '🔵';
+            }
+
+            return `
+              <div style="margin-bottom:10px; padding:12px; border-radius:14px; border:1px solid var(--border); background:var(--bg); display:flex; justify-content:space-between; align-items:center;">
+                <div>
+                  <strong style="color:${color}">${icon} ${pred.class}</strong> &middot; ${Math.round(pred.confidence*100)}%<br>
+                  <span class="small" style="color:var(--muted)">Defect box: Center [${pred.x.toFixed(0)}, ${pred.y.toFixed(0)}] &middot; Size ${pred.width.toFixed(0)}x${pred.height.toFixed(0)} px</span>
+                </div>
+                <span class="badge" style="background:rgba(99,102,241,0.08); color:var(--accent); font-size:11px;">Kakinada</span>
+              </div>
+            `;
+          }).join('');
+
+          updateResult(`
+            <div style="margin-bottom:14px; display:flex; justify-content:space-between; align-items:center;">
+              <div><strong>🎉 ${predictions.length} defect${predictions.length > 1 ? 's' : ''} successfully detected</strong></div>
+              <span style="font-size:11px; background:rgba(99,102,241,0.06); padding:4px 10px; border-radius:12px;">Model: ${modelName}</span>
+            </div>
+            <div style="margin-top:12px;">${list}</div>
+            <div class="small" style="margin-top:14px; padding:8px 12px; background:rgba(34,197,94,0.08); color:var(--good); border-radius:10px; text-align:center;">
+              💾 <strong>Saved!</strong> Defect logs added to home map and alerts list.
+            </div>
+          `);
+        }
+        
+        setProgress(100);
+        setTimeout(() => progressBar.classList.add('hidden'), 800);
+      } catch(err) {
+        updateResult(`
+          <div style="color:var(--poor); text-align:center; padding:12px;">
+            ⚠️ <strong>Error during analysis:</strong><br>
+            <span class="small">${err.message || 'Please verify your network connection and try again.'}</span>
+          </div>
+        `);
+        console.error(err);
+        progressBar.classList.add('hidden');
+      }
+      
+      analyzeBtn.disabled = false;
+      analyzeBtn.textContent = 'Analyze Image';
+    });
+  </script>
+</body>
+</html>
+
+

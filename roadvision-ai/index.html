@@ -1,0 +1,242 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Asphlatrica AI — Home</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+</head>
+<body>
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="brand"><span class="brand-dot"></span>Asphlatrica AI</div>
+      <ul class="nav-list">
+        <li><a href="index.html" class="nav-link">Home</a></li>
+        <li><a href="map.html" class="nav-link">Map</a></li>
+        <li><a href="analytics.html" class="nav-link">Analytics</a></li>
+        <li><a href="reports.html" class="nav-link">Reports</a></li>
+        <li><a href="alerts.html" class="nav-link">Alerts</a></li>
+        <li><a href="assets.html" class="nav-link">Assets</a></li>
+        <li><a href="detect.html" class="nav-link">Detect</a></li>
+        <li><a href="settings.html" class="nav-link">Settings</a></li>
+      </ul>
+      <div class="sidebar-footer">Kakinada — Sarpavaram monitoring dashboard</div>
+    </aside>
+
+    <main class="main-pane">
+      <div class="topbar">
+        <div class="logo">Asphlatrica AI — Kakinada</div>
+        <input id="searchInput" class="search-input" placeholder="Search roads, alerts...">
+        <div class="notification-wrapper">
+          <div class="notification-bell" id="homeBell" title="Notifications">🔔<span class="notification-badge">3</span></div>
+          <button class="username-button" id="homeUser">KA <span class="arrow">▾</span></button>
+          <div class="notification-menu" id="homeNotifications">
+            <div class="notification-item"><strong>New pothole report</strong><div class="small">Sarpavaram Road · 5m ago</div></div>
+            <div class="notification-item"><strong>Drone survey complete</strong><div class="small">Beach Road · 12m ago</div></div>
+            <div class="notification-item"><strong>Map alert updated</strong><div class="small">NH 216 · 30m ago</div></div>
+          </div>
+          <div class="notification-menu" id="homeUserMenu">
+            <div class="notification-item"><strong>Profile</strong><div class="small">View account settings</div></div>
+            <div class="notification-item"><strong>Logout</strong><div class="small">Sign out of Asphlatrica AI</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Top stat cards -->
+      <section class="stats-grid">
+        <div class="stats-card">
+          <div class="label">Total Roads</div>
+          <div class="value">312 km</div>
+          <div class="trend up">▲ 3% since last month</div>
+        </div>
+        <div class="stats-card" style="border-left:6px solid var(--good)">
+          <div class="label">Good</div>
+          <div class="value">48%</div>
+          <div class="trend up">▲ 3%</div>
+        </div>
+        <div class="stats-card" style="border-left:6px solid var(--moderate)">
+          <div class="label">Moderate</div>
+          <div class="value">31%</div>
+          <div class="trend down">▼ 2%</div>
+        </div>
+        <div class="stats-card" style="border-left:6px solid var(--poor)">
+          <div class="label">Poor</div>
+          <div class="value">21%</div>
+          <div class="trend up">▲ 5%</div>
+        </div>
+      </section>
+
+      <!-- Main area: map left, alerts right -->
+      <section class="charts-section">
+        <div class="panel-card map-panel">
+          <h3 style="margin:0 0 8px">Road Condition Map — Kakinada</h3>
+          <p class="small">Interactive map restricted to Kakinada and nearby areas (Sarpavaram focus).</p>
+          <div id="map" style="height:460px;border-radius:8px;margin-top:10px"></div>
+        </div>
+
+        <aside class="panel-card alerts-panel">
+          <div>
+            <h3 style="margin:0">Recent Alerts</h3>
+            <p class="small">Latest live alerts from the field</p>
+          </div>
+
+          <div id="alertsList">
+            <div class="alert-item critical" data-title="sarpavaram pothole">
+              <div class="title">🔴 High Pothole Detected — Sarpavaram Main Road</div>
+              <div class="small">Kakinada — 10m ago</div>
+            </div>
+
+            <div class="alert-item info" data-title="old town waterlogging">
+              <div class="title">🔵 Waterlogging Detected — Old Town Road</div>
+              <div class="small">Kakinada — 25m ago</div>
+            </div>
+
+            <div class="alert-item warning" data-title="severe road damage jagannaickpur">
+              <div class="title">🟠 Severe Road Damage — Jagannaickpur Road</div>
+              <div class="small">Sector 5 — 1hr ago</div>
+            </div>
+          </div>
+
+          <a href="alerts.html" class="alert-link">View All Alerts</a>
+        </aside>
+      </section>
+
+      <!-- Bottom stat cards -->
+      <section class="bottom-grid">
+        <div class="bottom-card">
+          <div class="accent-top accent-red"></div>
+          <div class="title"><span style="display:inline-flex;align-items:center;gap:8px;"><span style="width:24px;height:24px;border-radius:10px;background:rgba(239,68,68,0.14);display:inline-grid;place-items:center;">🛣️</span>Potholes Detected</span></div>
+          <div class="bottom-value" id="potholesVal">143</div>
+          <div class="bottom-note">This Week</div>
+        </div>
+        <div class="bottom-card">
+          <div class="accent-top accent-orange"></div>
+          <div class="title"><span style="display:inline-flex;align-items:center;gap:8px;"><span style="width:24px;height:24px;border-radius:10px;background:rgba(249,115,22,0.14);display:inline-grid;place-items:center;">📍</span>Affected Areas</span></div>
+          <div class="bottom-value" id="areasVal">18</div>
+          <div class="bottom-note">This Week</div>
+        </div>
+        <div class="bottom-card">
+          <div class="accent-top accent-blue"></div>
+          <div class="title"><span style="display:inline-flex;align-items:center;gap:8px;"><span style="width:24px;height:24px;border-radius:10px;background:rgba(59,130,246,0.14);display:inline-grid;place-items:center;">🪨</span>Cracks Detected</span></div>
+          <div class="bottom-value" id="cracksVal">67</div>
+          <div class="bottom-note">This Week</div>
+        </div>
+        <div class="bottom-card">
+          <div class="accent-top accent-green"></div>
+          <div class="title"><span style="display:inline-flex;align-items:center;gap:8px;"><span style="width:24px;height:24px;border-radius:10px;background:rgba(34,197,94,0.14);display:inline-grid;place-items:center;">📊</span>Roads Analysed</span></div>
+          <div class="bottom-value">312 km</div>
+          <div class="bottom-note">This Week</div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="js/main.js"></script>
+  <script>
+    // Initialize small Kakinada-focused map on the home page
+    const kCenter = [17.0005, 82.2362];
+    const kBounds = [[16.85,82.05],[17.15,82.42]]; // small bbox around Kakinada
+    const mapHome = L.map('map',{center:kCenter,zoom:13, maxBounds:kBounds, maxBoundsViscosity:1.0, scrollWheelZoom:false});
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19}).addTo(mapHome);
+
+    function mkIcon(cond){
+      const color = cond==='good'? 'var(--good)':cond==='moderate'?'var(--moderate)':'var(--poor)';
+      return L.divIcon({html:`<span style="display:block;width:14px;height:14px;border-radius:50%;background:${color};border:3px solid white"></span>`,className:'custom-icon',iconSize:[20,20]});
+    }
+
+    const roads = [
+      {name:'Sarpavaram Main Road', coords:[17.0101,82.2420], condition:'poor', issue:'Potholes', time:'10m ago'},
+      {name:'Kakinada–Rajahmundry Highway', coords:[17.045,82.225], condition:'moderate', issue:'Cracks', time:'30m ago'},
+      {name:'NH 216 Bypass', coords:[16.995,82.260], condition:'good', issue:'Good', time:'1h ago'},
+      {name:'Old Town Road, Kakinada', coords:[17.003,82.234], condition:'poor', issue:'Waterlogging', time:'25m ago'},
+      {name:'Jagannaickpur Road', coords:[17.020,82.220], condition:'moderate', issue:'Cracks', time:'40m ago'}
+    ];
+
+    // Load custom detections from local storage
+    let customDetections = [];
+    if (window.RV && window.RV.Detections) {
+      customDetections = window.RV.Detections.load();
+    }
+
+    // Dynamic stats update
+    let potholeCount = 143;
+    let crackCount = 67;
+    let uniqueAreas = new Set(roads.map(r => r.name.split(',')[0])); // Initial areas
+
+    customDetections.forEach(d => {
+      if (d.issue.toLowerCase() === 'pothole') potholeCount++;
+      if (d.issue.toLowerCase() === 'crack') crackCount++;
+      uniqueAreas.add(d.title.split(',')[0]);
+    });
+
+    document.getElementById('potholesVal').textContent = potholeCount;
+    document.getElementById('cracksVal').textContent = crackCount;
+    document.getElementById('areasVal').textContent = uniqueAreas.size;
+
+    // Add static roads to map
+    roads.forEach(r=>{
+      L.marker(r.coords,{icon:mkIcon(r.condition)}).addTo(mapHome).bindPopup(`<strong>${r.name}</strong><br/>Condition: ${r.condition}<br/>Issue: ${r.issue}<br/>Last: ${r.time}`);
+    });
+
+    // Add custom detections to map and alerts feed
+    const alertsList = document.getElementById('alertsList');
+    
+    customDetections.forEach((d, idx) => {
+      // Add custom marker to map
+      if (d.coords) {
+        L.marker(d.coords, {icon: mkIcon(d.condition)}).addTo(mapHome)
+          .bindPopup(`<strong>${d.title} (AI Detection)</strong><br/>Condition: ${d.condition}<br/>Issue: ${d.issue}<br/>Confidence: ${Math.round(d.confidence * 100)}%<br/>Time: Just now`);
+      }
+
+      // Prepend to alerts list (only show top 3 new ones to not overflow layout)
+      if (idx < 3) {
+        const item = document.createElement('div');
+        const severityClass = d.severity === 'critical' ? 'critical' : d.severity === 'warning' ? 'warning' : 'info';
+        const colorEmoji = d.severity === 'critical' ? '🔴' : d.severity === 'warning' ? '🟠' : '🔵';
+        
+        item.className = `alert-item ${severityClass}`;
+        item.dataset.title = d.title.toLowerCase() + " " + d.issue.toLowerCase();
+        item.innerHTML = `
+          <div class="title">${colorEmoji} AI Detected ${d.issue} — ${d.title}</div>
+          <div class="small">Kakinada &middot; Confidence: ${Math.round(d.confidence * 100)}% &middot; Just now</div>
+        `;
+        alertsList.insertBefore(item, alertsList.firstChild);
+      }
+    });
+
+    // Simple search input to filter alerts on this page
+    const searchInput = document.getElementById('searchInput');
+    searchInput.addEventListener('input', e=>{
+      const q = e.target.value.toLowerCase();
+      const alerts = document.querySelectorAll('.alert-item');
+      alerts.forEach(a=>{ a.style.display = a.dataset.title.includes(q)?'block':'none'; });
+    });
+
+    const homeBell = document.getElementById('homeBell');
+    const homeNotifications = document.getElementById('homeNotifications');
+    const homeUser = document.getElementById('homeUser');
+    const homeUserMenu = document.getElementById('homeUserMenu');
+    homeBell.addEventListener('click', ()=>{
+      homeNotifications.classList.toggle('visible');
+      homeUserMenu.classList.remove('visible');
+    });
+    homeUser.addEventListener('click', ()=>{
+      homeUserMenu.classList.toggle('visible');
+      homeNotifications.classList.remove('visible');
+    });
+    document.addEventListener('click', e=>{
+      if(!homeBell.contains(e.target) && !homeNotifications.contains(e.target)){
+        homeNotifications.classList.remove('visible');
+      }
+      if(!homeUser.contains(e.target) && !homeUserMenu.contains(e.target)){
+        homeUserMenu.classList.remove('visible');
+      }
+    });
+  </script>
+</body>
+</html>
+

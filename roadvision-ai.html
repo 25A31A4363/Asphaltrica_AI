@@ -1,0 +1,635 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>RoadVision AI</title>
+  <!-- Inter font loaded from Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <!-- Leaflet CSS from CDN -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-sA+e2z0GaQ6U+J5XpOTM2X5aL5oLWf6Ll9uS5ZGeP0M=" crossorigin="" />
+  <style>
+    /* Global dark theme colors and typography */
+    :root {
+      color-scheme: dark;
+      --bg: #0f172a;
+      --surface: #111827;
+      --surface-soft: #1f2937;
+      --border: #273449;
+      --text: #e2e8f0;
+      --muted: #94a3b8;
+      --accent: #6366f1;
+      --good: #22c55e;
+      --moderate: #eab308;
+      --poor: #ef4444;
+      --card: #17233e;
+      --shadow: 0 24px 80px rgba(15, 23, 42, 0.35);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: 'Inter', sans-serif;
+      background: linear-gradient(180deg, #0c1221 0%, #111827 100%);
+      color: var(--text);
+    }
+
+    img, svg {
+      display: block;
+      max-width: 100%;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: radial-gradient(circle at top left, rgba(99, 102, 241, 0.12) 0%, transparent 24%),
+                        radial-gradient(circle at bottom right, rgba(34, 197, 94, 0.08) 0%, transparent 28%);
+      pointer-events: none;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 260px 1fr;
+      min-height: 100vh;
+    }
+
+    .sidebar {
+      background: #0f172a;
+      border-right: 1px solid rgba(255, 255, 255, 0.05);
+      padding: 28px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 28px;
+    }
+
+    .brand {
+      font-size: 20px;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 999px;
+      background: linear-gradient(135deg, var(--accent), #22d3ee);
+      box-shadow: 0 0 14px rgba(99, 102, 241, 0.4);
+    }
+
+    .nav-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      display: grid;
+      gap: 10px;
+    }
+
+    .nav-link {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 14px 16px;
+      border-radius: 16px;
+      color: var(--muted);
+      text-decoration: none;
+      font-weight: 600;
+      transition: background 0.24s ease, color 0.24s ease, transform 0.24s ease;
+    }
+
+    .nav-link:hover,
+    .nav-link.active {
+      background: rgba(99, 102, 241, 0.18);
+      color: #f8fafc;
+      transform: translateX(2px);
+    }
+
+    .nav-link svg {
+      width: 18px;
+      height: 18px;
+      fill: currentColor;
+    }
+
+    .sidebar-footer {
+      margin-top: auto;
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.7;
+    }
+
+    .main-pane {
+      padding: 24px 32px;
+      display: flex;
+      flex-direction: column;
+      gap: 22px;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid rgba(148, 163, 184, 0.12);
+    }
+
+    .topbar h1 {
+      font-size: 26px;
+      font-weight: 800;
+      letter-spacing: -0.04em;
+      margin: 0;
+    }
+
+    .search-wrap {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+    }
+
+    .search-input {
+      width: 100%;
+      max-width: 560px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(148, 163, 184, 0.16);
+      color: var(--text);
+      padding: 12px 16px;
+      border-radius: 14px;
+      outline: none;
+      font-size: 14px;
+    }
+
+    .search-input::placeholder {
+      color: rgba(148, 163, 184, 0.82);
+    }
+
+    .top-actions {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .icon-button {
+      width: 44px;
+      height: 44px;
+      border-radius: 14px;
+      border: 1px solid rgba(148, 163, 184, 0.16);
+      background: rgba(255, 255, 255, 0.04);
+      display: grid;
+      place-items: center;
+      cursor: pointer;
+      color: var(--text);
+    }
+
+    .avatar {
+      width: 44px;
+      height: 44px;
+      border-radius: 16px;
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(34, 211, 238, 0.16));
+      border: 1px solid rgba(148, 163, 184, 0.16);
+      display: grid;
+      place-items: center;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .stats-grid,
+    .bottom-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 18px;
+    }
+
+    .stats-card,
+    .bottom-card,
+    .alerts-card,
+    .panel-card {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 22px;
+      padding: 22px;
+      box-shadow: var(--shadow);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      backdrop-filter: blur(10px);
+    }
+
+    .stats-card:hover,
+    .bottom-card:hover,
+    .alerts-card:hover,
+    .panel-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 28px 90px rgba(15, 23, 42, 0.45);
+    }
+
+    .stats-card span.label {
+      display: block;
+      color: var(--muted);
+      margin-bottom: 10px;
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .stats-card .value {
+      font-size: 30px;
+      font-weight: 800;
+      line-height: 1;
+      color: var(--text);
+    }
+
+    .trend {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 10px;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .trend.up {
+      color: var(--good);
+    }
+
+    .trend.down {
+      color: var(--moderate);
+    }
+
+    .trend-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 999px;
+      display: inline-block;
+      background: currentColor;
+    }
+
+    .charts-section {
+      display: grid;
+      grid-template-columns: 1.65fr 1fr;
+      gap: 22px;
+    }
+
+    .map-panel {
+      min-height: 540px;
+      overflow: hidden;
+      display: grid;
+      grid-template-rows: auto 1fr;
+    }
+
+    #map {
+      width: 100%;
+      height: 100%;
+      border-radius: 22px;
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .alerts-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .alerts-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 10px;
+    }
+
+    .alerts-header h2 {
+      font-size: 18px;
+      margin: 0;
+    }
+
+    .alert-item {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      padding: 18px;
+      border-left: 4px solid;
+      border-radius: 18px;
+      background: rgba(255,255,255,0.04);
+      transition: transform 0.2s ease;
+    }
+
+    .alert-item:hover {
+      transform: translateY(-3px);
+    }
+
+    .alert-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      color: var(--text);
+      font-weight: 700;
+    }
+
+    .alert-text {
+      color: var(--muted);
+      line-height: 1.65;
+    }
+
+    .alert-link {
+      color: var(--accent);
+      text-decoration: none;
+      font-weight: 700;
+    }
+
+    .bottom-card span.title {
+      display: block;
+      color: var(--muted);
+      font-size: 13px;
+      margin-bottom: 10px;
+      font-weight: 600;
+    }
+
+    .bottom-card .bottom-value {
+      font-size: 24px;
+      font-weight: 800;
+      color: var(--text);
+    }
+
+    .bottom-card .bottom-note {
+      margin-top: 10px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .accent-top {
+      position: relative;
+      margin: -22px -22px 16px;
+      height: 5px;
+      border-top-left-radius: 18px;
+      border-top-right-radius: 18px;
+    }
+
+    .accent-good { background: rgba(34, 197, 94, 0.35); }
+    .accent-moderate { background: rgba(234, 179, 8, 0.28); }
+    .accent-poor { background: rgba(239, 68, 68, 0.28); }
+    .accent-blue { background: rgba(59, 130, 246, 0.3); }
+    .accent-green { background: rgba(34, 197, 94, 0.25); }
+
+    .popup-card {
+      background: rgba(15, 23, 42, 0.95);
+      color: #f8fafc;
+      padding: 12px 14px;
+      border-radius: 14px;
+      box-shadow: 0 12px 40px rgba(0,0,0,0.4);
+    }
+
+    .popup-card h3 {
+      margin: 0 0 6px;
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .popup-card p { margin: 0; color: #cbd5e1; font-size: 13px; }
+
+    .marker-dot {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      border: 3px solid rgba(15, 23, 42, 0.9);
+      box-shadow: 0 0 0 rgba(255, 255, 255, 0.2);
+      animation: pulse 1.8s ease-out infinite;
+    }
+
+    .marker-good { background: var(--good); }
+    .marker-moderate { background: var(--moderate); }
+    .marker-poor { background: var(--poor); }
+
+    @keyframes pulse {
+      0% { transform: scale(1); opacity: 1; }
+      70% { transform: scale(1.8); opacity: 0; }
+      100% { opacity: 0; }
+    }
+
+    @media (max-width: 1240px) {
+      .layout { grid-template-columns: 1fr; }
+      .main-pane { padding: 20px; }
+      .charts-section { grid-template-columns: 1fr; }
+      .stats-grid,
+      .bottom-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+
+    @media (max-width: 900px) {
+      .topbar { flex-direction: column; align-items: flex-start; }
+      .search-wrap { width: 100%; }
+      .top-actions { width: 100%; justify-content: space-between; }
+      .stats-grid,
+      .bottom-grid { grid-template-columns: 1fr; }
+      .alerts-panel { order: 2; }
+      .charts-section { gap: 14px; }
+    }
+
+  </style>
+</head>
+<body>
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="brand">
+        <span class="brand-dot"></span>
+        RoadVision AI
+      </div>
+      <ul class="nav-list">
+        <li><a href="#" class="nav-link active"><svg viewBox="0 0 24 24"><path d="M4 12L12 4l8 8v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-8Z"/></svg>Home</a></li>
+        <li><a href="#" class="nav-link"><svg viewBox="0 0 24 24"><path d="M3 8.5v9A2.5 2.5 0 0 0 5.5 20h13a2.5 2.5 0 0 0 2.5-2.5v-9"/><path d="M7 11.5h10M7 15.5h8"/></svg>Map</a></li>
+        <li><a href="#" class="nav-link"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h8"/></svg>Analysis</a></li>
+        <li><a href="#" class="nav-link"><svg viewBox="0 0 24 24"><path d="M6 4h12v4H6zM6 10h8v4H6zM6 16h12v4H6z"/></svg>Reports</a></li>
+        <li><a href="#" class="nav-link"><svg viewBox="0 0 24 24"><path d="M12 2a6 6 0 0 0-6 6v4a6 6 0 0 1-2 4v1h16v-1a6 6 0 0 1-2-4V8a6 6 0 0 0-6-6Z"/><path d="M8 20a4 4 0 0 0 8 0"/></svg>Alerts</a></li>
+        <li><a href="#" class="nav-link"><svg viewBox="0 0 24 24"><path d="M4 5h16v14H4z"/><path d="M8 9h8M8 13h8"/></svg>Assets</a></li>
+        <li><a href="#" class="nav-link"><svg viewBox="0 0 24 24"><path d="M12 5.5A6.5 6.5 0 0 1 18.5 12a6.5 6.5 0 0 1-6.5 6.5A6.5 6.5 0 0 1 5.5 12 6.5 6.5 0 0 1 12 5.5Z"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>Settings</a></li>
+      </ul>
+      <div class="sidebar-footer">Monitoring live road conditions in India with intelligent alerts and interactive analytics.</div>
+    </aside>
+
+    <main class="main-pane">
+      <section class="topbar">
+        <h1>RoadVision AI</h1>
+        <div class="search-wrap">
+          <input id="searchInput" class="search-input" type="search" placeholder="Search alerts, roads, cities..." />
+        </div>
+        <div class="top-actions">
+          <button class="icon-button" aria-label="Notifications">
+            <svg viewBox="0 0 24 24" width="20" height="20"><path d="M12 22a2 2 0 0 0 2-2H10a2 2 0 0 0 2 2ZM18 16v-5a6 6 0 0 0-5-5.92V4a1 1 0 0 0-2 0v1.08A6 6 0 0 0 6 11v5l-2 2v1h16v-1l-2-2Z"/></svg>
+          </button>
+          <div class="avatar">RV</div>
+        </div>
+      </section>
+
+      <section class="stats-grid">
+        <article class="stats-card" style="background: rgba(99, 102, 241, 0.08);">
+          <span class="label">Total Roads</span>
+          <div class="value">1,246 km</div>
+          <div class="trend up"><span class="trend-dot"></span>62% Good</div>
+        </article>
+        <article class="stats-card" style="background: rgba(34, 197, 94, 0.08);">
+          <span class="label">Good</span>
+          <div class="value">62%</div>
+          <div class="trend up"><span class="trend-dot"></span>Upward trend</div>
+        </article>
+        <article class="stats-card" style="background: rgba(234, 179, 8, 0.12);">
+          <span class="label">Moderate</span>
+          <div class="value">24%</div>
+          <div class="trend down"><span class="trend-dot"></span>Downward trend</div>
+        </article>
+        <article class="stats-card" style="background: rgba(239, 68, 68, 0.12);">
+          <span class="label">Poor</span>
+          <div class="value">14%</div>
+          <div class="trend up"><span class="trend-dot"></span>Upward trend</div>
+        </article>
+      </section>
+
+      <section class="charts-section">
+        <div class="map-panel panel-card">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+            <div>
+              <h2 style="font-size:18px;margin:0;">Road Condition Map</h2>
+              <p style="margin:6px 0 0;color:var(--muted);font-size:13px;">India-only map with sample condition markers.</p>
+            </div>
+            <span style="font-size:12px;color:var(--muted);background:rgba(255,255,255,0.04);padding:8px 12px;border-radius:999px;">India bounds locked</span>
+          </div>
+          <div id="map"></div>
+        </div>
+
+        <div class="alerts-panel panel-card alerts-card">
+          <div class="alerts-header">
+            <h2>Recent Alerts</h2>
+            <span style="color:var(--muted);font-size:13px;">Filtered by search</span>
+          </div>
+          <div id="alertsList">
+            <div class="alert-item" data-title="high pothole detected">
+              <div class="alert-title" style="border-color: var(--poor);">🔴 High Pothole Detected</div>
+              <div class="alert-text">MG Road, Sector 12 — 10m ago</div>
+            </div>
+            <div class="alert-item" data-title="waterlogging detected">
+              <div class="alert-title" style="border-color: var(--moderate);">🟡 Waterlogging Detected</div>
+              <div class="alert-text">Ring Road, Sector 5 — 25m ago</div>
+            </div>
+            <div class="alert-item" data-title="severe road damage">
+              <div class="alert-title" style="border-color: #f97316;">🟠 Severe Road Damage</div>
+              <div class="alert-text">Link Road, Sector 19 — 1hr ago</div>
+            </div>
+          </div>
+          <a href="#" class="alert-link">View All Alerts</a>
+        </div>
+      </section>
+
+      <section class="bottom-grid">
+        <article class="bottom-card">
+          <div class="accent-top accent-poor"></div>
+          <span class="title">Potholes Detected</span>
+          <div class="bottom-value">156</div>
+          <div class="bottom-note">This Week</div>
+        </article>
+        <article class="bottom-card">
+          <div class="accent-top accent-moderate"></div>
+          <span class="title">Affected Areas</span>
+          <div class="bottom-value">23</div>
+          <div class="bottom-note">This Week</div>
+        </article>
+        <article class="bottom-card">
+          <div class="accent-top accent-blue"></div>
+          <span class="title">Cracks Detected</span>
+          <div class="bottom-value">89</div>
+          <div class="bottom-note">This Week</div>
+        </article>
+        <article class="bottom-card">
+          <div class="accent-top accent-green"></div>
+          <span class="title">Roads Analysed</span>
+          <div class="bottom-value">312 km</div>
+          <div class="bottom-note">This Week</div>
+        </article>
+      </section>
+    </main>
+  </div>
+
+  <!-- Leaflet JS for interactive map -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-o9N1j7kI1QY03Rv+Kk2Qc4JUlPx0n849GH8mYMYR0v8=" crossorigin=""></script>
+  <script>
+    // Define India bounds so the map cannot be panned outside the country.
+    const indiaBounds = [[6.4627, 68.1097], [35.5133, 97.3953]];
+    const map = L.map('map', {
+      center: [20.5937, 78.9629],
+      zoom: 5,
+      minZoom: 5,
+      maxZoom: 8,
+      maxBounds: indiaBounds,
+      maxBoundsViscosity: 1.0,
+      scrollWheelZoom: false,
+      zoomControl: true,
+    });
+
+    // Add the OpenStreetMap tile layer.
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19,
+      attribution: '© OpenStreetMap contributors',
+    }).addTo(map);
+
+    // Helper function to create a styled marker with pulsing effect.
+    function createMarkerColor(condition) {
+      const color = condition === 'good' ? 'var(--good)' : condition === 'moderate' ? 'var(--moderate)' : 'var(--poor)';
+      return L.divIcon({
+        className: 'custom-marker',
+        html: `<span class="marker-dot marker-${condition}" style="background:${color};"></span>`,
+        iconSize: [24, 24],
+        iconAnchor: [12, 12],
+      });
+    }
+
+    // Add sample city markers with popups.
+    const sampleMarkers = [
+      { city: 'Delhi', coords: [28.7041, 77.1025], condition: 'poor', time: 'Updated 5m ago' },
+      { city: 'Mumbai', coords: [19.0760, 72.8777], condition: 'moderate', time: 'Updated 12m ago' },
+      { city: 'Hyderabad', coords: [17.3850, 78.4867], condition: 'good', time: 'Updated 8m ago' },
+      { city: 'Chennai', coords: [13.0827, 80.2707], condition: 'moderate', time: 'Updated 18m ago' },
+      { city: 'Kolkata', coords: [22.5726, 88.3639], condition: 'poor', time: 'Updated 9m ago' },
+      { city: 'Bangalore', coords: [12.9716, 77.5946], condition: 'good', time: 'Updated 6m ago' },
+    ];
+
+    sampleMarkers.forEach(marker => {
+      const icon = createMarkerColor(marker.condition);
+      L.marker(marker.coords, { icon }).addTo(map)
+        .bindPopup(`
+          <div class="popup-card">
+            <h3>${marker.city}</h3>
+            <p>Condition: ${marker.condition.charAt(0).toUpperCase() + marker.condition.slice(1)}</p>
+            <p>${marker.time}</p>
+          </div>
+        `);
+    });
+
+    // Sidebar click effect: add active class to the clicked link.
+    document.querySelectorAll('.nav-link').forEach(link => {
+      link.addEventListener('click', event => {
+        event.preventDefault();
+        document.querySelectorAll('.nav-link').forEach(item => item.classList.remove('active'));
+        link.classList.add('active');
+      });
+    });
+
+    // Search functionality to filter alert cards.
+    const searchInput = document.getElementById('searchInput');
+    const alerts = document.querySelectorAll('.alert-item');
+
+    searchInput.addEventListener('input', event => {
+      const query = event.target.value.toLowerCase();
+      alerts.forEach(alert => {
+        const text = alert.dataset.title;
+        const match = text.includes(query);
+        alert.style.display = match ? 'flex' : 'none';
+      });
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Upload - Road Condition Detector</title>
+  <link rel="stylesheet" href="../style.css" />
+</head>
+<body>
+  <aside class="sidebar">
+    <div class="brand">Road Condition Detector</div>
+    <nav>
+      <a href="../index.html">Dashboard</a>
+      <a href="upload.html" class="active">Image Upload</a>
+      <a href="webcam.html">Live Webcam</a>
+      <a href="map.html">Map</a>
+    </nav>
+  </aside>
+
+  <main class="main page">
+    <h2>Image Upload Detection</h2>
+    <div class="panel">
+      <p>Select a road photo to detect potholes, cracks, and waterlogging.</p>
+      <div class="controls">
+        <input id="fileInput" type="file" accept="image/*" />
+        <button id="detectBtn">Detect</button>
+      </div>
+      <div style="position:relative;margin-top:12px">
+        <img id="preview" class="preview" alt="preview" />
+        <canvas id="overlay" class="overlay-canvas"></canvas>
+      </div>
+      <div class="results" id="results"></div>
+    </div>
+  </main>
+
+  <script src="../app.js"></script>
+  <script>
+    // Page script: handle file input and call RCD.detectFile
+    const fileInput = document.getElementById('fileInput');
+    const detectBtn = document.getElementById('detectBtn');
+    const preview = document.getElementById('preview');
+    const overlay = document.getElementById('overlay');
+    const results = document.getElementById('results');
+    let currentFile = null;
+
+    fileInput.addEventListener('change', e=>{ currentFile = e.target.files[0]; if(currentFile){ preview.src = URL.createObjectURL(currentFile); preview.onload = ()=>{ overlay.width = preview.width; overlay.height = preview.height; }; }});
+
+    detectBtn.addEventListener('click', async ()=>{
+      if(!currentFile){ alert('Choose an image first'); return; }
+      detectBtn.disabled = true; detectBtn.textContent='Detecting...';
+      try{
+        const res = await window.RCD.detectFile(currentFile);
+        // draw boxes
+        const ctx = overlay.getContext('2d'); ctx.clearRect(0,0,overlay.width,overlay.height); ctx.strokeStyle='red'; ctx.lineWidth=2; ctx.font='14px Arial';
+        results.innerHTML='';
+        for(const p of res.predictions){
+          // scale coordinates if needed (res.width corresponds to natural or canvas width used by detector)
+          const scaleX = overlay.width / res.width; const scaleY = overlay.height / res.height;
+          const x = p.x * scaleX; const y = p.y * scaleY; const w = p.w * scaleX; const h = p.h * scaleY;
+          ctx.strokeStyle = p.label==='pothole'? 'red': p.label==='crack'? 'orange':'blue';
+          ctx.strokeRect(x,y,w,h);
+          ctx.fillStyle = ctx.strokeStyle; ctx.fillText(`${p.label} (${(p.confidence*100).toFixed(0)}%)`, x+4, y+14);
+          const div = document.createElement('div'); div.className='result-item'; div.textContent = `${p.label} — ${(p.confidence*100).toFixed(1)}%`;
+          results.appendChild(div);
+          // save detection without coords (user can pin on map later)
+          const det = {label:p.label,confidence:p.confidence,src:URL.createObjectURL(currentFile),time:window.RCD.nowISO()};
+          window.RCD.saveDetection(det);
+        }
+      }catch(err){ alert('Detection error: '+err.message); }
+      detectBtn.disabled=false; detectBtn.textContent='Detect';
+    });
+  </script>
+</body>
+</html>

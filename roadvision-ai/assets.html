@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Asphlatrica AI — Assets</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="brand"><span class="brand-dot"></span>Asphlatrica AI</div>
+      <ul class="nav-list">
+        <li><a href="index.html" class="nav-link">Home</a></li>
+        <li><a href="map.html" class="nav-link">Map</a></li>
+        <li><a href="analytics.html" class="nav-link">Analytics</a></li>
+        <li><a href="reports.html" class="nav-link">Reports</a></li>
+        <li><a href="alerts.html" class="nav-link">Alerts</a></li>
+        <li><a href="assets.html" class="nav-link active">Assets</a></li>
+        <li><a href="detect.html" class="nav-link">Detect</a></li>
+        <li><a href="settings.html" class="nav-link">Settings</a></li>
+      </ul>
+      <div class="sidebar-footer">Field assets & equipment in Kakinada</div>
+    </aside>
+
+    <main class="main-pane">
+      <div class="topbar">
+        <div class="logo">Asphlatrica AI — Assets</div>
+        <input id="searchInput" class="search-input" placeholder="Search assets...">
+        <div style="display:flex;gap:10px;align-items:center">
+          <button class="icon-button">🔔</button>
+          <div class="avatar">KA</div>
+        </div>
+      </div>
+
+      <h2>Field Assets & Equipment — Kakinada Road Monitoring</h2>
+      <p class="small">Overview of vehicles, sensors, and devices deployed</p>
+
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:12px">
+        <div class="small">Total Assets: <strong>8</strong> &nbsp; Active: <strong>5</strong> &nbsp; Offline: <strong>1</strong> &nbsp; Maintenance: <strong>2</strong></div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:12px">
+        <div class="panel-card">
+          <div style="font-weight:800">🚗 Road Survey Vehicle #1</div>
+          <div class="small">Active — Last used: Sarpavaram Road</div>
+        </div>
+        <div class="panel-card">
+          <div style="font-weight:800">🚗 Road Survey Vehicle #2</div>
+          <div class="small">Maintenance — Scheduled repair</div>
+        </div>
+        <div class="panel-card">
+          <div style="font-weight:800">📷 CCTV Camera Node #1</div>
+          <div class="small">Online — NH 216 Junction</div>
+        </div>
+        <div class="panel-card">
+          <div style="font-weight:800">📷 CCTV Camera Node #2</div>
+          <div class="small">Online — Old Town Road</div>
+        </div>
+        <div class="panel-card" style="border:2px solid rgba(99,102,241,0.14)">
+          <div style="font-weight:800">🤖 Road Doctor Machine</div>
+          <div class="small">Active — Deployed: Kakinada Municipal Zone 3</div>
+        </div>
+        <div class="panel-card">
+          <div style="font-weight:800">📡 IoT Sensor Cluster A</div>
+          <div class="small">Online — Sarpavaram</div>
+        </div>
+        <div class="panel-card">
+          <div style="font-weight:800">📡 IoT Sensor Cluster B</div>
+          <div class="small">Offline — Battery low</div>
+        </div>
+        <div class="panel-card">
+          <div style="font-weight:800">🚁 Drone Unit #1</div>
+          <div class="small">Standby — Last survey: Beach Road</div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <script src="js/main.js"></script>
+</body>
+</html>
+

@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Asphlatrica AI — Alerts</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="brand"><span class="brand-dot"></span>Asphlatrica AI</div>
+      <ul class="nav-list">
+        <li><a href="index.html" class="nav-link">Home</a></li>
+        <li><a href="map.html" class="nav-link">Map</a></li>
+        <li><a href="analytics.html" class="nav-link">Analytics</a></li>
+        <li><a href="reports.html" class="nav-link">Reports</a></li>
+        <li><a href="alerts.html" class="nav-link active">Alerts</a></li>
+        <li><a href="assets.html" class="nav-link">Assets</a></li>
+        <li><a href="detect.html" class="nav-link">Detect</a></li>
+        <li><a href="settings.html" class="nav-link">Settings</a></li>
+      </ul>
+      <div class="sidebar-footer">Live alerts for Kakinada roads</div>
+    </aside>
+
+    <main class="main-pane">
+      <div class="topbar">
+        <div class="logo">Asphlatrica AI — Alerts</div>
+        <input id="searchInput" class="search-input" placeholder="Filter alerts...">
+        <div style="display:flex;gap:10px;align-items:center">
+          <button class="icon-button" id="notifyToggle">🔔</button>
+          <div class="avatar">KA</div>
+        </div>
+      </div>
+
+      <h2>Live Road Alerts — Kakinada</h2>
+      <p class="small">Real-time warnings for commuters</p>
+
+      <div class="pill-tabs" style="margin-top:12px">
+        <button class="pill-tab all active" data-filter="all">All</button>
+        <button class="pill-tab critical" data-filter="critical">Critical</button>
+        <button class="pill-tab warning" data-filter="warning">Warning</button>
+        <button class="pill-tab info" data-filter="info">Info</button>
+      </div>
+
+      <div id="alertsContainer" style="margin-top:18px;display:flex;flex-direction:column;gap:14px">
+        <!-- Alerts will be injected here -->
+      </div>
+
+      <div class="panel-card" style="margin-top:14px;display:flex;gap:16px;align-items:center">
+        <div><strong>Total Active Alerts:</strong> <span id="totalAlerts">0</span></div>
+        <div><strong>Critical:</strong> <span id="critCount">0</span></div>
+        <div><strong>Warnings:</strong> <span id="warnCount">0</span></div>
+        <div><strong>Clear:</strong> <span id="clearCount">0</span></div>
+      </div>
+
+    </main>
+  </div>
+
+  <script src="js/main.js"></script>
+  <script>
+    // Sample alert objects
+    const sampleAlerts = [
+      {severity:'critical',title:'Sarpavaram Main Road',msg:'Deep potholes detected. Avoid if possible.',time:10},
+      {severity:'critical',title:'Old Town Road',msg:'Severe waterlogging after rainfall. Do not cross.',time:25},
+      {severity:'warning',title:'Suryaraopeta Road',msg:'Multiple potholes reported. Drive slowly.',time:45},
+      {severity:'warning',title:'Gandhi Nagar Road',msg:'Surface cracking worsening. Heavy vehicles avoid.',time:75},
+      {severity:'info',title:'Jagannaickpur Road',msg:'Repair work scheduled. Expect delays.',time:120},
+      {severity:'clear',title:'NH 216 Bypass',msg:'Road in good condition. Safe to travel.',time:180}
+    ];
+
+    // Load custom detections from local storage and prepend to sampleAlerts
+    if (window.RV && window.RV.Detections) {
+      const customDetections = window.RV.Detections.load();
+      customDetections.forEach(d => {
+        sampleAlerts.unshift({
+          severity: d.severity,
+          title: d.title,
+          msg: d.msg,
+          time: d.time || 1
+        });
+      });
+    }
+
+    const container = document.getElementById('alertsContainer');
+    function renderAlerts(filter='all'){
+      container.innerHTML='';
+      const filtered = sampleAlerts.filter(a=> filter==='all' ? true : (filter==='critical'? a.severity==='critical' : filter===a.severity));
+      filtered.forEach(a=>{
+        const div = document.createElement('div');
+        div.className = 'alert-item ' + (a.severity==='critical'? 'critical' : a.severity==='warning'? 'warning' : a.severity==='info'? 'info' : 'clear');
+        div.innerHTML = `<div style='display:flex;justify-content:space-between'><div class='title'>${a.severity==='critical'? '🔴 CRITICAL': a.severity==='warning'? '🟠 WARNING': a.severity==='info'? '🟡 INFO':'🟢 CLEAR'} — ${a.title}</div><button class='icon-button nav-btn' data-road='${a.title}'>Navigate Around</button></div><div class='small'>${a.msg}</div><div class='small'>${a.time}m ago</div>`;
+        container.appendChild(div);
+      });
+
+      // update stats
+      document.getElementById('totalAlerts').textContent = sampleAlerts.length;
+      document.getElementById('critCount').textContent = sampleAlerts.filter(a=>a.severity==='critical').length;
+      document.getElementById('warnCount').textContent = sampleAlerts.filter(a=>a.severity==='warning').length;
+      document.getElementById('clearCount').textContent = sampleAlerts.filter(a=>a.severity==='clear').length;
+    }
+
+    renderAlerts();
+
+    // Filter buttons
+    document.querySelectorAll('[data-filter]').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        document.querySelectorAll('.pill-tab').forEach(tab=>tab.classList.remove('active'));
+        btn.classList.add('active');
+        renderAlerts(btn.dataset.filter);
+      });
+    });
+
+    // Auto-refresh timestamps every 30 seconds (simulate by decrementing minutes)
+    setInterval(()=>{
+      sampleAlerts.forEach(a=>{ if(a.time<10000) a.time += 0; }); // placeholder if real-time data
+      const activeFilter = document.querySelector('.pill-tab.active')?.dataset.filter || 'all';
+      renderAlerts(activeFilter);
+    },30000);
+
+    // Navigation button opens Google Maps search for road
+    document.addEventListener('click', (e)=>{
+      if(e.target.matches('.nav-btn')){
+        const road = e.target.dataset.road; const url = `https://www.google.com/maps/search/${encodeURIComponent(road + ', Kakinada')}`;
+        window.open(url,'_blank');
+      }
+    });
+
+    // Notification toggle (requests permission)
+    document.getElementById('notifyToggle').addEventListener('click', async ()=>{
+      if(!('Notification' in window)) return alert('Notifications not supported');
+      const p = await Notification.requestPermission(); if(p==='granted') alert('Notifications enabled');
+    });
+  </script>
+</body>
+</html>
+

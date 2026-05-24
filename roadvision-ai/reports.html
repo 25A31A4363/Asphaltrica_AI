@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Asphlatrica AI — Reports</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+</head>
+<body>
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="brand"><span class="brand-dot"></span>Asphlatrica AI</div>
+      <ul class="nav-list">
+        <li><a href="index.html" class="nav-link">Home</a></li>
+        <li><a href="map.html" class="nav-link">Map</a></li>
+        <li><a href="analytics.html" class="nav-link">Analytics</a></li>
+        <li><a href="reports.html" class="nav-link active">Reports</a></li>
+        <li><a href="alerts.html" class="nav-link">Alerts</a></li>
+        <li><a href="assets.html" class="nav-link">Assets</a></li>
+        <li><a href="detect.html" class="nav-link">Detect</a></li>
+        <li><a href="settings.html" class="nav-link">Settings</a></li>
+      </ul>
+      <div class="sidebar-footer">Road condition reports — Kakinada, Sarpavaram</div>
+    </aside>
+
+    <main class="main-pane">
+      <div class="topbar">
+        <div class="logo">Asphlatrica AI — Reports</div>
+        <input id="searchInput" class="search-input" placeholder="Filter reports...">
+        <div style="display:flex;gap:10px;align-items:center">
+          <button class="icon-button">🔔</button>
+          <div class="avatar">KA</div>
+        </div>
+      </div>
+
+      <div class="panel-card">
+        <h3>Road Condition Reports — Kakinada, Sarpavaram</h3>
+        <div style="display:flex;gap:10px;margin-top:10px;align-items:center">
+          <input id="filterName" placeholder="Road name" class="search-input" style="max-width:240px">
+          <select id="filterCondition" class="search-input" style="max-width:160px"><option value="">Any</option><option value="good">Good</option><option value="moderate">Moderate</option><option value="poor">Poor</option></select>
+          <button id="exportBtn" class="icon-button">Export PDF</button>
+        </div>
+
+        <table class="table" style="margin-top:12px">
+          <thead><tr><th>Road Name</th><th>Location</th><th>Condition</th><th>Issue Type</th><th>Severity</th><th>Last Inspected</th><th>Status</th></tr></thead>
+          <tbody id="reportBody">
+          </tbody>
+        </table>
+      </div>
+    </main>
+  </div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="js/main.js"></script>
+  <script>
+    // Prefill 10 rows of Kakinada road data
+    const defaultReports = [
+      ['Sarpavaram Main Road','Sarpavaram','poor','Potholes','High','2026-05-20','Open'],
+      ['Old Town Road','Old Town','poor','Waterlogging','High','2026-05-20','Investigating'],
+      ['Jagannaickpur Road','Jagannaickpur','moderate','Cracks','Medium','2026-05-18','Scheduled'],
+      ['Beach Road (Kakinada)','Beach Road','good','None','Low','2026-04-30','Closed'],
+      ['NH 216 Bypass','NH 216','good','Minor cracks','Low','2026-05-01','Closed'],
+      ['Gandhi Nagar Road','Gandhi Nagar','moderate','Potholes','Medium','2026-05-10','In Progress'],
+      ['Kakinada–Rajahmundry Highway','Kakinada–Rajahmundry','moderate','Surface damage','Medium','2026-05-05','Scheduled'],
+      ['Suryaraopeta Road','Suryaraopeta','poor','Severe potholes','High','2026-05-19','Open'],
+      ['Collector Office Road','Collector Office','good','None','Low','2026-03-30','Closed'],
+      ['APSRTC Bus Stand Road','Bus Stand','moderate','Waterlogging','Medium','2026-05-02','In Progress']
+    ];
+
+    // Load reports from localStorage or fallback to defaults
+    const reports = JSON.parse(localStorage.getItem('asphlatrica_ai_reports_v1')) || defaultReports;
+    if (!localStorage.getItem('asphlatrica_ai_reports_v1')) {
+      localStorage.setItem('asphlatrica_ai_reports_v1', JSON.stringify(reports));
+    }
+
+    const tbody = document.getElementById('reportBody');
+    const filterNameInput = document.getElementById('filterName');
+    const filterConditionSelect = document.getElementById('filterCondition');
+
+    function renderReports(){
+      tbody.innerHTML = '';
+      const query = filterNameInput.value.toLowerCase();
+      const condFilter = filterConditionSelect.value;
+
+      reports.forEach((r, idx) => {
+        const matchesQuery = r[0].toLowerCase().includes(query) || r[1].toLowerCase().includes(query);
+        const matchesCond = !condFilter || r[2] === condFilter;
+
+        if (matchesQuery && matchesCond) {
+          const tr = document.createElement('tr');
+          
+          // Style select element dynamically based on selection
+          let colorStyle = '';
+          if (r[2] === 'good') colorStyle = 'background:rgba(34,197,94,0.08); color:var(--good); border-color:rgba(34,197,94,0.25);';
+          else if (r[2] === 'moderate') colorStyle = 'background:rgba(234,179,8,0.08); color:var(--moderate); border-color:rgba(234,179,8,0.25);';
+          else if (r[2] === 'poor') colorStyle = 'background:rgba(239,68,68,0.08); color:var(--poor); border-color:rgba(239,68,68,0.25);';
+
+          tr.innerHTML = `
+            <td><a href="#" class="small link-report" style="font-weight:700; color:var(--accent); text-decoration:none;">${r[0]}</a></td>
+            <td class="small">${r[1]}</td>
+            <td>
+              <select class="search-input select-condition" data-index="${idx}" style="max-width:130px; font-weight:800; padding:6px 10px; font-size:12px; border-radius:12px; border:1px solid; outline:none; cursor:pointer; transition:all 0.2s; ${colorStyle}">
+                <option value="good" ${r[2] === 'good' ? 'selected' : ''}>GOOD</option>
+                <option value="moderate" ${r[2] === 'moderate' ? 'selected' : ''}>MODERATE</option>
+                <option value="poor" ${r[2] === 'poor' ? 'selected' : ''}>POOR</option>
+              </select>
+            </td>
+            <td class="small">${r[3]}</td>
+            <td class="small">${r[4]}</td>
+            <td class="small">${r[5]}</td>
+            <td class="small">${r[6]}</td>
+          `;
+          tbody.appendChild(tr);
+        }
+      });
+    }
+
+    // Sync changed values to reports state and localStorage
+    tbody.addEventListener('change', e => {
+      if (e.target.classList.contains('select-condition')) {
+        const idx = parseInt(e.target.dataset.index);
+        const newValue = e.target.value;
+        reports[idx][2] = newValue;
+        localStorage.setItem('asphlatrica_ai_reports_v1', JSON.stringify(reports));
+        renderReports();
+      }
+    });
+
+    // Listeners for filters
+    filterNameInput.addEventListener('input', renderReports);
+    filterConditionSelect.addEventListener('change', renderReports);
+
+    // Initial render
+    renderReports();
+
+    // Export to PDF (prints page)
+    document.getElementById('exportBtn').addEventListener('click', ()=>{ window.print(); });
+
+    // Map mini-preview when clicking a report row (opens map popup)
+    document.addEventListener('click', (e)=>{
+      if(e.target.matches('.link-report')){
+        e.preventDefault(); alert('Map preview: opens map focusing on ' + e.target.textContent + '. (Demo)');
+      }
+    });
+  </script>
+</body>
+</html>
+
+

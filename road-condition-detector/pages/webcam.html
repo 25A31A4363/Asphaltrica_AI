@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Webcam - Road Condition Detector</title>
+  <link rel="stylesheet" href="../style.css" />
+</head>
+<body>
+  <aside class="sidebar">
+    <div class="brand">Road Condition Detector</div>
+    <nav>
+      <a href="../index.html">Dashboard</a>
+      <a href="upload.html">Image Upload</a>
+      <a href="webcam.html" class="active">Live Webcam</a>
+      <a href="map.html">Map</a>
+    </nav>
+  </aside>
+
+  <main class="main page">
+    <h2>Live Webcam Detection</h2>
+    <div class="panel">
+      <p>Allow camera access and run detection in near real-time. Detections with geolocation are saved to the map dataset.</p>
+      <div style="position:relative">
+        <video id="video" autoplay playsinline style="max-width:100%;border-radius:8px;background:#000"></video>
+        <canvas id="vOverlay" class="overlay-canvas"></canvas>
+        <div class="scan-overlay"><div class="sweep"></div></div>
+      </div>
+      <div style="margin-top:8px;display:flex;gap:8px">
+        <button id="startBtn">Start</button>
+        <button id="stopBtn" disabled>Stop</button>
+        <label><input id="geoCb" type="checkbox" checked /> Attach geolocation</label>
+      </div>
+      <div id="wstats" style="margin-top:8px;color:#334155">Status: idle</div>
+    </div>
+  </main>
+
+  <script src="../app.js"></script>
+  <script>
+    const video = document.getElementById('video');
+    const overlay = document.getElementById('vOverlay');
+    const startBtn = document.getElementById('startBtn');
+    const stopBtn = document.getElementById('stopBtn');
+    const wstats = document.getElementById('wstats');
+    const geoCb = document.getElementById('geoCb');
+    let stream=null, intervalId=null;
+
+    async function startCamera(){
+      stream = await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}, audio:false});
+      video.srcObject = stream;
+      await video.play();
+      overlay.width = video.videoWidth; overlay.height = video.videoHeight;
+    }
+
+    async function startDetection(){
+      try{
+        await startCamera();
+      }catch(e){ alert('Camera error: '+e.message); return; }
+      startBtn.disabled=true; stopBtn.disabled=false; wstats.textContent='Status: running';
+      intervalId = setInterval(async ()=>{
+        try{
+          const res = await window.RCD.detectVideoFrame(video);
+          const ctx = overlay.getContext('2d'); ctx.clearRect(0,0,overlay.width,overlay.height);
+          for(const p of res.predictions){
+            ctx.strokeStyle = p.label==='pothole'? 'red': p.label==='crack'? 'orange':'blue'; ctx.lineWidth=3; ctx.strokeRect(p.x,p.y,p.w,p.h);
+            ctx.fillStyle = ctx.strokeStyle; ctx.fillText(`${p.label} ${(p.confidence*100).toFixed(0)}%`, p.x+6, p.y+14);
+            // attach location if enabled
+            if(geoCb.checked && navigator.geolocation){
+              navigator.geolocation.getCurrentPosition((pos)=>{
+                const lat=pos.coords.latitude, lng=pos.coords.longitude;
+                window.RCD.saveDetection({label:p.label,confidence:p.confidence,lat,lng,time:window.RCD.nowISO()});
+              });
+            } else {
+              window.RCD.saveDetection({label:p.label,confidence:p.confidence,time:window.RCD.nowISO()});
+            }
+          }
+        }catch(err){ console.warn('frame detect error',err); }
+      }, 1200);
+    }
+
+    function stopDetection(){
+      clearInterval(intervalId); intervalId=null; wstats.textContent='Status: stopped'; startBtn.disabled=false; stopBtn.disabled=true;
+      if(stream){ stream.getTracks().forEach(t=>t.stop()); video.srcObject=null; stream=null; }
+    }
+
+    startBtn.addEventListener('click', startDetection);
+    stopBtn.addEventListener('click', stopDetection);
+  </script>
+</body>
+</html>

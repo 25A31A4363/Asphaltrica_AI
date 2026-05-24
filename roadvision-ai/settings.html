@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Asphlatrica AI — Settings</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="brand"><span class="brand-dot"></span>Asphlatrica AI</div>
+      <ul class="nav-list">
+        <li><a href="index.html" class="nav-link">Home</a></li>
+        <li><a href="map.html" class="nav-link">Map</a></li>
+        <li><a href="analytics.html" class="nav-link">Analytics</a></li>
+        <li><a href="reports.html" class="nav-link">Reports</a></li>
+        <li><a href="alerts.html" class="nav-link">Alerts</a></li>
+        <li><a href="assets.html" class="nav-link">Assets</a></li>
+        <li><a href="detect.html" class="nav-link">Detect</a></li>
+        <li><a href="settings.html" class="nav-link active">Settings</a></li>
+      </ul>
+      <div class="sidebar-footer">Configure application and notification preferences</div>
+    </aside>
+
+    <main class="main-pane">
+      <div class="topbar">
+        <div class="logo">Asphlatrica AI — Settings</div>
+        <input id="searchInput" class="search-input" placeholder="Search settings...">
+        <div style="display:flex;gap:10px;align-items:center">
+          <button class="icon-button">🔔</button>
+          <div class="avatar">KA</div>
+        </div>
+      </div>
+
+      <h2>Profile & Preferences</h2>
+      <p class="small">Personalize your Asphlatrica AI experience for Kakinada and Sarpavaram.</p>
+
+      <div class="section-card">
+        <h3>User Profile Settings</h3>
+        <div class="profile-header" style="gap:16px; display:flex; align-items:center;">
+          <div class="profile-avatar" id="settingsAvatar">KA</div>
+          <div style="flex:1; display:flex; flex-direction:column; gap:8px;">
+            <div style="display:flex; align-items:center; gap:8px;">
+              <span style="font-size:13px; font-weight:700; width:50px;">Name:</span>
+              <input id="userNameInput" class="search-input" placeholder="Your Name..." style="flex:1; max-width:280px; padding:6px 12px; font-size:13px;">
+            </div>
+            <div style="display:flex; align-items:center; gap:8px;">
+              <span style="font-size:13px; font-weight:700; width:50px;">Email:</span>
+              <input id="userEmailInput" class="search-input" placeholder="Your Email..." style="flex:1; max-width:280px; padding:6px 12px; font-size:13px;">
+            </div>
+          </div>
+        </div>
+        <div class="small" style="margin-top:14px">Your initials and user information will automatically sync across all dashboard pages on save.</div>
+      </div>
+
+      <div class="section-card">
+        <h3>Localization</h3>
+        <div class="setting-row">
+          <label>Region</label>
+          <select id="citySelect" class="search-input" style="max-width:260px"><option>Kakinada, Andhra Pradesh</option></select>
+        </div>
+        <div class="setting-row">
+          <label>Language</label>
+          <div class="pill-group" id="langGroup">
+            <button type="button" class="pill-option" data-value="English">English</button>
+            <button type="button" class="pill-option" data-value="Telugu">Telugu</button>
+          </div>
+        </div>
+        <div class="setting-row">
+          <label>Timezone</label>
+          <select id="tzSelect" class="search-input" style="max-width:260px"><option>IST (UTC+5:30)</option></select>
+        </div>
+      </div>
+
+      <div class="section-card">
+        <h3>Display & Theme</h3>
+        <div class="setting-row">
+          <label>Theme</label>
+          <div class="pill-group" id="themeGroup">
+            <button type="button" class="pill-option" data-value="light">Light</button>
+            <button type="button" class="pill-option" data-value="dark">Dark</button>
+          </div>
+        </div>
+        <div class="setting-row">
+          <label>Default Map View</label>
+          <select id="mapView" class="search-input" style="max-width:260px"><option>Road</option><option>Satellite</option></select>
+        </div>
+        <div class="setting-row">
+          <label>Default Zoom</label>
+          <input id="zoomRange" type="range" min="5" max="15" value="13" style="width:240px">
+        </div>
+      </div>
+
+      <div class="section-card">
+        <h3>Alert Preferences</h3>
+        <div class="setting-row"><label>Critical Alerts</label><label class="toggle-switch"><input type="checkbox" id="prefCritical" checked><span class="toggle-slider"></span></label></div>
+        <div class="setting-row"><label>Warning Alerts</label><label class="toggle-switch"><input type="checkbox" id="prefWarning" checked><span class="toggle-slider"></span></label></div>
+        <div class="setting-row"><label>Info Alerts</label><label class="toggle-switch"><input type="checkbox" id="prefInfo" checked><span class="toggle-slider"></span></label></div>
+        <div class="setting-row" style="align-items:flex-start"><label>Alert SMS</label><input id="smsNumber" class="search-input" placeholder="+91..." style="max-width:260px"></div>
+      </div>
+
+      <div style="display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin-top:12px">
+        <button id="saveSettings" class="button-primary">Save Preferences</button>
+        <div class="small">Settings are saved locally and remembered across pages.</div>
+      </div>
+
+    </main>
+  </div>
+
+  <script src="js/main.js"></script>
+  <script>
+    const s = RV.Settings.load();
+    const langButtons = document.querySelectorAll('#langGroup .pill-option');
+    const themeButtons = document.querySelectorAll('#themeGroup .pill-option');
+    const setActiveOption = (buttons, value) => {
+      buttons.forEach(btn=> btn.classList.toggle('active', btn.dataset.value===value));
+    };
+
+    document.getElementById('citySelect').value = s.city || 'Kakinada, Andhra Pradesh';
+    document.getElementById('tzSelect').value = s.timezone || 'IST (UTC+5:30)';
+    document.getElementById('zoomRange').value = s.zoom || 13;
+    document.getElementById('mapView').value = s.mapView || 'Road';
+    document.getElementById('smsNumber').value = s.sms || '';
+    setActiveOption(langButtons, s.lang || 'English');
+    setActiveOption(themeButtons, s.theme || 'light');
+
+    themeButtons.forEach(btn=> btn.addEventListener('click', ()=>{
+      setActiveOption(themeButtons, btn.dataset.value);
+      if (window.RV && window.RV.applyTheme) {
+        window.RV.applyTheme(btn.dataset.value);
+      }
+    }));
+    langButtons.forEach(btn=> btn.addEventListener('click', ()=>{
+      setActiveOption(langButtons, btn.dataset.value);
+    }));
+
+    document.getElementById('saveSettings').addEventListener('click', ()=>{
+      const selectedLang = document.querySelector('#langGroup .pill-option.active')?.dataset.value || 'English';
+      const selectedTheme = document.querySelector('#themeGroup .pill-option.active')?.dataset.value || 'light';
+      const obj = {
+        city: document.getElementById('citySelect').value,
+        lang: selectedLang,
+        theme: selectedTheme,
+        timezone: document.getElementById('tzSelect').value,
+        zoom: document.getElementById('zoomRange').value,
+        mapView: document.getElementById('mapView').value,
+        sms: document.getElementById('smsNumber').value,
+        name: document.getElementById('userNameInput').value.trim(),
+        email: document.getElementById('userEmailInput').value.trim()
+      };
+      RV.Settings.save(obj);
+      if (window.RV && window.RV.applyUserProfile) {
+        window.RV.applyUserProfile();
+      }
+      alert('Preferences saved successfully! Profile and theme details have been updated.');
+    });
+    if (window.RV && window.RV.applyUserProfile) {
+      window.RV.applyUserProfile();
+    }
+  </script>
+</body>
+</html>
+

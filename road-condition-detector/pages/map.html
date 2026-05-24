@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Map - Road Condition Detector</title>
+  <link rel="stylesheet" href="../style.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+</head>
+<body>
+  <aside class="sidebar">
+    <div class="brand">Road Condition Detector</div>
+    <nav>
+      <a href="../index.html">Dashboard</a>
+      <a href="upload.html">Image Upload</a>
+      <a href="webcam.html">Live Webcam</a>
+      <a href="map.html" class="active">Map</a>
+    </nav>
+  </aside>
+
+  <main class="main page">
+    <h2>Map Visualization</h2>
+    <div class="panel">
+      <p>Detected conditions are pinned on the map. Click a marker to view details.</p>
+      <div id="map"></div>
+      <div style="margin-top:8px;display:flex;gap:8px">
+        <button id="locBtn">Center to My Location</button>
+        <button id="reloadBtn">Reload Detections</button>
+        <button id="clearBtn">Clear All Detections</button>
+      </div>
+    </div>
+  </main>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="../app.js"></script>
+  <script>
+    const map = L.map('map').setView([20,0], 2);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {maxZoom:19}).addTo(map);
+
+    function colorForLabel(label){ return label==='pothole'?'red':label==='crack'?'orange':'blue'; }
+
+    function addMarkerFor(d){
+      if(!d.lat || !d.lng) return; // skip if no coords
+      const color = colorForLabel(d.label||'crack');
+      const marker = L.circleMarker([d.lat,d.lng], {radius:8,color,fillColor:color,fillOpacity:0.7}).addTo(map);
+      marker.bindPopup(`<strong>${d.label}</strong><br/>${(d.confidence*100||0).toFixed(1)}%<br/>${d.time||''}`);
+    }
+
+    function loadDetections(){
+      const arr = window.RCD.readDetections();
+      // clear existing layers by resetting map tilepane
+      // (simple approach: reload map by removing all circleMarkers via keeping refs would be better)
+      // We'll just add markers for all items with lat,lng
+      for(const d of arr){ if(d.lat && d.lng) addMarkerFor(d); }
+    }
+
+    document.getElementById('reloadBtn').addEventListener('click', ()=>{ loadDetections(); });
+    document.getElementById('clearBtn').addEventListener('click', ()=>{ if(confirm('Clear saved detections?')){ window.RCD.clearDetections(); location.reload(); }});
+    document.getElementById('locBtn').addEventListener('click', ()=>{ navigator.geolocation.getCurrentPosition(p=>{ map.setView([p.coords.latitude,p.coords.longitude],16); }); });
+
+    // initial load
+    loadDetections();
+  </script>
+</body>
+</html>

@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Asphlatrica AI — Map</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+</head>
+<body>
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="brand"><span class="brand-dot"></span>Asphlatrica AI</div>
+      <ul class="nav-list">
+        <li><a href="index.html" class="nav-link">Home</a></li>
+        <li><a href="map.html" class="nav-link active">Map</a></li>
+        <li><a href="analytics.html" class="nav-link">Analytics</a></li>
+        <li><a href="reports.html" class="nav-link">Reports</a></li>
+        <li><a href="alerts.html" class="nav-link">Alerts</a></li>
+        <li><a href="assets.html" class="nav-link">Assets</a></li>
+        <li><a href="detect.html" class="nav-link">Detect</a></li>
+        <li><a href="settings.html" class="nav-link">Settings</a></li>
+      </ul>
+      <div class="sidebar-footer">Explore road layers and conditions across Andhra Pradesh</div>
+    </aside>
+
+    <main class="main-pane">
+      <div class="topbar">
+        <div class="logo">Asphlatrica AI — Map</div>
+        <input id="searchInput" class="search-input" placeholder="Search roads, areas...">
+        <div style="display:flex;gap:10px;align-items:center">
+          <button class="icon-button">🔔</button>
+          <div class="avatar">KA</div>
+        </div>
+      </div>
+
+      <div class="panel-card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+          <div>
+            <h3 style="margin:0">India Map — Andhra Pradesh Highlight</h3>
+            <p class="small">Click the Andhra Pradesh region to zoom to Kakinada</p>
+          </div>
+          <div style="display:flex;gap:8px">
+            <label class="small"><input type="checkbox" id="toggleConditions" checked> Road Condition</label>
+            <label class="small"><input type="checkbox" id="togglePotholes" checked> Potholes</label>
+            <label class="small"><input type="checkbox" id="toggleWater" checked> Waterlogging</label>
+            <label class="small"><input type="checkbox" id="toggleCracks" checked> Cracks</label>
+          </div>
+        </div>
+        <div id="mapFull" style="height:640px;border-radius:8px"></div>
+        <div style="position:relative">
+          <div style="position:absolute;right:12px;bottom:12px;background:var(--card);padding:8px;border-radius:8px;border:1px solid var(--border)">
+            <div class="small"><strong>Legend</strong></div>
+            <div class="small">🟢 Good &nbsp; 🟡 Moderate &nbsp; 🔴 Poor</div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="js/main.js"></script>
+  <script>
+    // India center and Andhra Pradesh polygon (approximate simplified polygon)
+    const indiaCenter = [20.5937,78.9629];
+    const indiaBounds = [[5.0,68.0],[35.0,97.0]];
+    const map = L.map('mapFull',{center: indiaCenter, zoom:5, minZoom:4, maxZoom:12, maxBounds: indiaBounds, maxBoundsViscosity:0.8});
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+
+    // Simplified Andhra Pradesh polygon coordinates (not exact boundary, approximated for demo)
+    const apPoly = [
+      [15.9, 79.0],[16.1, 80.5],[17.0, 82.0],[18.5, 84.5],[18.0,85.5],[16.5,84.8],[15.7,82.3],[15.6,80.9]
+    ];
+    const apLayer = L.polygon(apPoly, {color: '#3b82f6', fillColor:'#3b82f6', fillOpacity:0.3, opacity:0.8, weight:2}).addTo(map);
+    apLayer.on('click', ()=>{ map.setView([17.0005,82.2362],13); });
+
+    // Sample layering for roads in Andhra Pradesh (markers)
+    const markersGroup = L.layerGroup().addTo(map);
+    const sample = [
+      {name:'Sarpavaram Main Road', coords:[17.0101,82.2420], condition:'poor', issue:'Potholes', last:'10m'},
+      {name:'Kakinada–Rajahmundry Highway', coords:[17.045,82.225], condition:'moderate', issue:'Cracks', last:'30m'},
+      {name:'NH 216 Bypass', coords:[16.995,82.260], condition:'good', issue:'Clear', last:'1h'},
+      {name:'Old Town Road', coords:[17.003,82.234], condition:'poor', issue:'Waterlogging', last:'25m'},
+      {name:'Jagannaickpur Road', coords:[17.020,82.220], condition:'moderate', issue:'Cracks', last:'40m'}
+    ];
+
+    function addMarker(m){
+      const color = m.condition==='good'? 'var(--good)':m.condition==='moderate'?'var(--moderate)':'var(--poor)';
+      const icon = L.divIcon({html:`<span style="display:block;width:14px;height:14px;border-radius:50%;background:${color};border:3px solid white"></span>`,className:'',iconSize:[20,20]});
+      const mk = L.marker(m.coords,{icon}).addTo(markersGroup).bindPopup(`<strong>${m.name}</strong><br/>Condition: ${m.condition}<br/>Issue: ${m.issue}<br/>Last: ${m.last}`);
+      return mk;
+    }
+    sample.forEach(addMarker);
+
+    // Load custom detections from local storage
+    if (window.RV && window.RV.Detections) {
+      const customDetections = window.RV.Detections.load();
+      customDetections.forEach(d => {
+        if (d.coords) {
+          addMarker({
+            name: d.title + ' (AI Detection)',
+            coords: d.coords,
+            condition: d.condition,
+            issue: d.issue,
+            last: 'Just now'
+          });
+        }
+      });
+    }
+
+    // Layer toggles
+    document.getElementById('toggleConditions').addEventListener('change', e=>{ if(e.target.checked) map.addLayer(markersGroup); else map.removeLayer(markersGroup); });
+    document.getElementById('togglePotholes').addEventListener('change', ()=>{/* For demo, all in one group */});
+    document.getElementById('toggleWater').addEventListener('change', ()=>{});
+    document.getElementById('toggleCracks').addEventListener('change', ()=>{});
+
+    // Satellite layer option toggling using Esri tiles
+    const esriSat = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}');
+    // Add simple control to toggle
+    const baseMaps = { 'Map': L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'), 'Satellite': esriSat };
+    L.control.layers(baseMaps, null, {position:'topright', collapsed:true}).addTo(map);
+
+  </script>
+</body>
+</html>
+
